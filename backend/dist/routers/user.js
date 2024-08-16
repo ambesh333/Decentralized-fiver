@@ -18,7 +18,7 @@ const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_presigned_post_1 = require("@aws-sdk/s3-presigned-post");
 const types_1 = require("../types");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const __1 = require("..");
+const config_1 = require("../config");
 const middleware_1 = require("../middleware");
 const router = (0, express_1.Router)();
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
@@ -32,6 +32,49 @@ const s3Client = new client_s3_1.S3Client({
     region: "us-east-1",
 });
 const prismaClient = new client_1.PrismaClient();
+router.get("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const taskId = req.query.taskId;
+    //@ts-ignore
+    const userId = req.userId;
+    const taskDeatils = yield prismaClient.task.findFirst({
+        where: {
+            user_id: Number(userId),
+            id: Number(taskId),
+        },
+        include: {
+            options: true,
+        },
+    });
+    if (!taskDeatils) {
+        return res.status(411).json({
+            meassage: "You dont have access to this task",
+        });
+    }
+    const response = yield prismaClient.submission.findMany({
+        where: {
+            task_id: Number(taskId),
+        },
+        include: {
+            option: true,
+        },
+    });
+    const result = {};
+    taskDeatils.options.forEach((option) => {
+        result[option.id] = {
+            count: 0,
+            option: {
+                imageUrl: option.image_url,
+            },
+        };
+    });
+    response.forEach((r) => {
+        result[r.option_id].count++;
+    });
+    res.json({
+        result,
+    });
+}));
 router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
     const userId = req.userId;
@@ -95,7 +138,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (existingUser) {
         const token = jsonwebtoken_1.default.sign({
             userId: existingUser.id,
-        }, __1.JWT_SECRET);
+        }, config_1.JWT_SECRET);
         res.json({
             token,
         });
@@ -108,7 +151,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
         const token = jsonwebtoken_1.default.sign({
             userId: user.id,
-        }, __1.JWT_SECRET);
+        }, config_1.JWT_SECRET);
         res.json({
             token,
         });

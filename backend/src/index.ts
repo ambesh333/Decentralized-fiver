@@ -8,8 +8,6 @@ app.use(express.json());
 import * as dotenv from "dotenv";
 dotenv.config();
 
-export const JWT_SECRET = "ambesh";
-
 app.use("/v1/user", userRouter);
 app.use("/v1/worker", workerRouter);
 

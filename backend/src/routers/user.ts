@@ -5,7 +5,7 @@ import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { createTaskInput } from "../types";
 
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "..";
+import { JWT_SECRET } from "../config";
 import { authMiddleware } from "../middleware";
 const router = Router();
 
@@ -23,6 +23,66 @@ const s3Client = new S3Client({
 });
 
 const prismaClient = new PrismaClient();
+
+router.get("/task", authMiddleware, async (req, res) => {
+  //@ts-ignore
+  const taskId: string = req.query.taskId;
+  //@ts-ignore
+
+  const userId: string = req.userId;
+
+  const taskDeatils = await prismaClient.task.findFirst({
+    where: {
+      user_id: Number(userId),
+      id: Number(taskId),
+    },
+    include: {
+      options: true,
+    },
+  });
+
+  if (!taskDeatils) {
+    return res.status(411).json({
+      meassage: "You dont have access to this task",
+    });
+  }
+
+  const response = await prismaClient.submission.findMany({
+    where: {
+      task_id: Number(taskId),
+    },
+    include: {
+      option: true,
+    },
+  });
+
+  const result: Record<
+    string,
+    {
+      count: number;
+      option: {
+        imageUrl: string;
+      };
+    }
+  > = {};
+
+  taskDeatils.options.forEach((option) => {
+    result[option.id] = {
+      count: 0,
+      option: {
+        imageUrl: option.image_url,
+      },
+    };
+  });
+
+  response.forEach((r) => {
+    result[r.option_id].count++;
+  });
+
+  res.json({
+    result,
+  });
+});
 
 router.post("/task", authMiddleware, async (req, res) => {
   //@ts-ignore
