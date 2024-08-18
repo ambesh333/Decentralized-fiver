@@ -21,6 +21,12 @@ const db_1 = require("../db");
 const types_1 = require("../types");
 const TOTAL_SUBMISSIONS = 100;
 const prismaClient = new client_1.PrismaClient();
+prismaClient.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+    // Code running in a transaction...
+}), {
+    maxWait: 5000, // default: 2000
+    timeout: 10000, // default: 5000
+});
 const router = (0, express_1.Router)();
 router.post("/payout", middleware_1.workerMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
