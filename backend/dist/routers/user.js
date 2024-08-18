@@ -90,7 +90,7 @@ router.post("/task", middleware_1.authMiddleware, (req, res) => __awaiter(void 0
         const response = yield prismaClient.task.create({
             data: {
                 title: (_a = parsedData.data.title) !== null && _a !== void 0 ? _a : DEFAULT_TITLE,
-                amount: "1",
+                amount: 1 * config_1.TOTAL_DECIMALS,
                 signature: parsedData.data.signature,
                 user_id: userId,
             },

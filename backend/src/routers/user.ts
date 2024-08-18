@@ -5,7 +5,7 @@ import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { createTaskInput } from "../types";
 
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
+import { JWT_SECRET, TOTAL_DECIMALS } from "../config";
 import { authMiddleware } from "../middleware";
 const router = Router();
 
@@ -98,7 +98,7 @@ router.post("/task", authMiddleware, async (req, res) => {
     const response = await prismaClient.task.create({
       data: {
         title: parsedData.data.title ?? DEFAULT_TITLE,
-        amount: "1",
+        amount: 1 * TOTAL_DECIMALS,
         signature: parsedData.data.signature,
         user_id: userId,
       },
